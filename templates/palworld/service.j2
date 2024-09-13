@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Palworld Dedicated Server
+Wants=network-online.target
+After=syslog.target network.target nss-lookup.target network-online.target
+
+[Service]
+Environment="LD_LIBRARY_PATH=./linux64"
+ExecStartPre={{ gameserver_steamcmd }} +force_install_dir "{{ gameserver_basepath }}/{{ gameserver_installgame }}" +login anonymous +app_update 2394010 validate +quit
+ExecStart={{ gameserver_basepath }}/{{ gameserver_installgame }}/PalServer.sh
+User={{ gameserver_adminuser }}
+Group={{ gameserver_admingroup }}
+StandardOutput=journal
+Restart=on-failure
+RestartSec=10
+WorkingDirectory={{ gameserver_basepath }}/{{ gameserver_installgame }}
+
+[Install]
+WantedBy=multi-user.target

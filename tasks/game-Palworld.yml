@@ -1,0 +1,27 @@
+---
+- name: "[gameserver] download Palworld server"
+  command: >
+    /opt/steamcmd/steamcmd.sh +@sSteamCmdForcePlatformType linux \
+    +force_install_dir "{{ gameserver_basepath }}/{{ gameserver_installgame }}" +login anonymous \
+    +app_update 2394010 validate +quit
+  become: true
+  become_user: "{{ gameserver_adminuser }}"
+  tags: gameserver
+
+- name: "[gameserver] create systemd service (Palworld)"
+  template:
+    src: palworld/service.j2
+    dest: /etc/systemd/system/palworld.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] enable/disable Palworld server service"
+  systemd:
+    name: satisfactory
+    enabled: "{{ gameserver_palworld_enabled }}"
+    state: "{{ gameserver_palworld_state }}"
+  become: true
+  tags: gameserver

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [[ -e {{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/GameplaySettings/GameXishu.json ]]
+then
+  echo "File GameXishu.json found!"
+  ls -lah {{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/GameplaySettings/GameXishu.json
+fi
+
+if [[ -e {{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/Worlds/Dedicated/Level01_Main/world.db ]]
+then
+  echo "File world.db found!"
+  ls -lah {{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/Worlds/Dedicated/Level01_Main/world.db
+fi
+
+exit
+
+DESTINATION="soulmask@whateverserver"
+
+scp {{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/GameplaySettings/GameXishu.json \
+  $DESTINATION:{{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/GameplaySettings/GameXishu.json
+
+scp ./soulmaskserver/WS/Saved/Worlds/Dedicated/Level01_Main/world.db \
+  $DESTINATION:{{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/Worlds/Dedicated/Level01_Main/world.db

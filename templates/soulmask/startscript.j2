@@ -1,0 +1,36 @@
+#!/bin/bash
+SERVERDIR="{{ gameserver_basepath }}/{{ gameserver_installgame }}"
+STEAMCMD="/opt/steamcmd/steamcmd.sh"
+UPDATECOMMAND="$STEAMCMD +@sSteamCmdForcePlatformType linux +force_install_dir $SERVERDIR +login anonymous +app_update 3017300 +quit"
+RUN_UPDATE=false
+
+while getopts "u" opt; do
+    case ${opt} in
+        u )
+            RUN_UPDATE=true
+            ;;
+        \? )
+            echo "Usage: $0 [-u]"
+            echo "   -u   Update server before start"
+            exit 1
+            ;;
+    esac
+done
+
+# Update Soulmask Server
+if [ "$RUN_UPDATE" = true ]; then
+    eval $UPDATECOMMAND
+fi
+
+# Start Soulmask Server
+source /etc/profile
+LD_LIBRARY_PATH=$SERVERDIR/linux64 \
+$SERVERDIR/WS/Binaries/Linux/WSServer-Linux-Shipping WS Level01_Main -UTF8Output \
+    -server -log -forcepassthrough \
+    -SteamServerName='{{ gameserver_soulmask_servername }}' \
+    -MaxPlayers={{ gameserver_soulmask_maxplayers }} \
+    {%if gameserver_soulmask_serverpassword != "" %}-PSW='{{ gameserver_soulmask_serverpassword }}'{% endif %} \
+    -adminpsw='{{ gameserver_soulmask_adminpassword }}' \
+    {%if gameserver_soulmask_pve %}-pve{% endif %} \
+    -Port=8777 -QueryPort=27015 -EchoPort=18888 -MULTIHOME=0.0.0.0 \
+    -initbackup -backup=900 -saving=600

@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Soulmask Dedicated Server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=SteamAppId=3017300
+Environment=LD_LIBRARY_PATH={{ gameserver_basepath }}/{{ gameserver_installgame }}/linux64:$LD_LIBRARY_PATH
+Type=simple
+KillSignal=SIGINT
+Restart=on-failure
+RestartSec=10
+User={{ gameserver_adminuser }}
+Group={{ gameserver_admingroup }}
+WorkingDirectory={{ gameserver_basepath }}/{{ gameserver_installgame }}
+ExecStartPre=/usr/games/steamcmd +@sSteamCmdForcePlatformType linux +force_install_dir {{ gameserver_basepath }}/{{ gameserver_installgame }} +login anonymous +app_update 3017300 +quit
+
+ExecStart=/bin/bash -c "/usr/bin/screen -DmS soulmask {{ gameserver_basepath }}/{{ gameserver_installgame }}/StartServer.sh -SteamServerName='{{ gameserver_soulmask_servername }}' -MaxPlayers={{ gameserver_soulmask_maxplayers }} -PSW='{{ gameserver_soulmask_serverpassword }}' -adminpsw='{{ gameserver_soulmask_adminpassword }}' {%if gameserver_soulmask_pve %}-pve{% endif %} -Port=8777 -QueryPort=27015 -EchoPort=18888"
+ExecStop=-/bin/bash -c "echo 'saveworld 1' | /usr/bin/telnet 127.0.0.1 18888"
+ExecStop=-/bin/bash -c "echo 'quit 1' | /usr/bin/telnet 127.0.0.1 18888"
+
+[Install]
+WantedBy=multi-user.target

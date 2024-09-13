@@ -1,0 +1,66 @@
+---
+- name: "[gameserver] download Soulmask server"
+  command: >
+    /opt/steamcmd/steamcmd.sh +@sSteamCmdForcePlatformType linux \
+    +force_install_dir "{{ gameserver_basepath }}/{{ gameserver_installgame }}" +login anonymous \
+    +app_update 3017300 validate +quit
+  become: true
+  become_user: "{{ gameserver_adminuser }}"
+  tags: gameserver
+
+- name: "[gameserver] fix Soulmask server bug (14.06.2024)"
+  blockinfile:
+    path: "{{ gameserver_basepath }}/{{ gameserver_installgame }}/StartServer.sh"
+    marker: ""
+    block: |
+      source /etc/profile
+    insertafter: '^\./WSServer\.sh.*$'
+  become: true
+  become_user: "{{ gameserver_adminuser }}"
+  tags: gameserver
+
+- name: "[gameserver] create server start script"
+  template:
+    src: soulmask/startscript.j2
+    dest: "{{ gameserver_basepath }}/{{ gameserver_installgame }}/soulmask_start.sh"
+    owner: "{{ gameserver_adminuser }}"
+    group: "{{ gameserver_admingroup }}"
+    mode: "0755"
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] create JSON update script for tweaking game settings"
+  template:
+    src: soulmask/json_update.j2
+    dest: "{{ gameserver_basepath }}/{{ gameserver_installgame }}/soulmask_json_update.sh"
+    owner: "{{ gameserver_adminuser }}"
+    group: "{{ gameserver_admingroup }}"
+    mode: "0755"
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] create user log script for Soulmask server"
+  template:
+    src: soulmask/userlist.j2
+    dest: "{{ gameserver_basepath }}/{{ gameserver_installgame }}/soulmask_userlist.sh"
+    owner: "{{ gameserver_adminuser }}"
+    group: "{{ gameserver_admingroup }}"
+    mode: "0755"
+  become: true
+  tags: gameserver
+
+# - name: "[gameserver] Create systemd service"
+#   template:
+#     src: soulmask/service.j2
+#     dest: /etc/systemd/system/soulmaskserver.service
+#     owner: root
+#     group: root
+#     mode: "0644"
+#   tags: gameserver
+# 
+# - name: "[gameserver] Enable/disable Soulmask Server service"
+#   systemd:
+#     name: soulmaskserver
+#     enabled: "{{ gameserver_soulmask_enabled }}"
+#     state: "{{ gameserver_soulmask_state }}"
+#   tags: gameserver

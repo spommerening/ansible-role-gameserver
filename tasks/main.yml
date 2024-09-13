@@ -1,0 +1,31 @@
+---
+- import_tasks: prerequisites.yml
+  tags: gameserver
+
+- import_tasks: install-SteamCMD.yml
+  tags: gameserver
+
+- name: "[gameserver] create game directory"
+  file:
+    path: "{{ gameserver_basepath }}/{{ gameserver_installgame }}"
+    owner: "{{ gameserver_adminuser }}"
+    group: "{{ gameserver_admingroup }}"
+    state: directory
+    mode: '0750'
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] install 'Palworld' server"
+  include_tasks: game-Palworld.yml
+  when: gameserver_installgame == "palworld"
+  tags: gameserver
+
+- name: "[gameserver] install 'Satisfactory' server"
+  include_tasks: game-Satisfactory.yml
+  when: gameserver_installgame == "satisfactory"
+  tags: gameserver
+
+- name: "[gameserver] install 'Soulmask' server"
+  include_tasks: game-Soulmask.yml
+  when: gameserver_installgame == "soulmask"
+  tags: gameserver

@@ -1,0 +1,42 @@
+---
+- name: "[gameserver] ensure system is up-to-date"
+  apt:
+    upgrade: true
+    update_cache: true
+    cache_valid_time: 86400   # one day
+  when: gameserver_updatepackages
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] install dependencies"
+  apt:
+    name:
+      - lib32gcc-s1
+      - curl
+      - software-properties-common
+      - screen
+    state: present
+    update_cache: yes
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] Add i386 architecture"
+  command:
+    cmd: dpkg --add-architecture i386
+  register: add_arch_result
+  changed_when: "'i386' not in add_arch_result.stdout"
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] Add multiverse repository"
+  apt_repository:
+    repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} multiverse"
+    state: present
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] refresh package list"
+  apt:
+    update_cache: true
+  become: true
+  tags: gameserver

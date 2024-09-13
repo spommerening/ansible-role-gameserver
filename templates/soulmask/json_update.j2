@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# File to be modified
+FILE="{{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/GameplaySettings/GameXishu.json"
+
+# Key and new value
+KEY="JianZhuFuLanMul"
+NEW_VALUE="0"
+
+# Update the JSON file
+jq --arg key "$KEY" --arg new_value "$NEW_VALUE" '
+(.. | select(type == "object") | select(has($key)) | .[$key]) |= $new_value
+' "$FILE" > temp.json
+
+#jq --arg new_value "$NEW_VALUE" '.[$KEY] = $new_value' "$FILE" > temp.json
+# jq --arg new_value "$NEW_VALUE" '.[$KEY] = $new_value' "$FILE" > temp.json && mv temp.json "$FILE"
+
+# Check if the command succeeded
+if [ $? -eq 0 ]; then
+  echo "The value of \"$KEY\" was successfully updated to \"$NEW_VALUE\"."
+else
+  echo "Failed to update the value of \"$KEY\"."
+fi

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+OUTPUT=$(grep 'Join succeeded' {{ gameserver_basepath }}/{{ gameserver_installgame }}/WS/Saved/Logs/WS*)
+echo "${OUTPUT}" | sed 's/^.*log://'

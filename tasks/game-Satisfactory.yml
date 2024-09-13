@@ -1,0 +1,27 @@
+---
+- name: "[gameserver] download Satisfactory server"
+  command: >
+    /opt/steamcmd/steamcmd.sh +@sSteamCmdForcePlatformType linux \
+    +force_install_dir "{{ gameserver_basepath }}/{{ gameserver_installgame }}" +login anonymous \
+    +app_update 1690800 validate +quit
+  become: true
+  become_user: "{{ gameserver_adminuser }}"
+  tags: gameserver
+
+- name: "[gameserver] create systemd service (Satisfactory)"
+  template:
+    src: satisfactory/service.j2
+    dest: /etc/systemd/system/satisfactory.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] enable/disable Satisfactory server service"
+  systemd:
+    name: satisfactory
+    enabled: "{{ gameserver_satisfactory_enabled }}"
+    state: "{{ gameserver_satisfactory_state }}"
+  become: true
+  tags: gameserver

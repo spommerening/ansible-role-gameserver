@@ -1,0 +1,16 @@
+---
+gameserver_updatepackages: true
+
+gameserver_steamcmd: "/opt/steamcmd/steamcmd.sh"
+
+gameserver_palworld_enabled: true
+gameserver_palworld_state: started
+
+gameserver_soulmask_servername: "My wonderful PVE-World"
+gameserver_soulmask_maxplayers: 50
+gameserver_soulmask_serverpassword: ""
+gameserver_soulmask_adminpassword: "veryverysecret"
+gameserver_soulmask_pve: true
+
+gameserver_satisfactory_enabled: true
+gameserver_satisfactory_state: started
