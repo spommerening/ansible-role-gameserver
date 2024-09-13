@@ -3,9 +3,12 @@
 Installs game servers using SteamCMD on Linux (Ubuntu). 
 
 Currently supported:
-* Palworld
-* Satisfactory
-* Soulmask
+
+| Game | added on |
+|------|-------|
+| Palworld | 13.09.2024 |
+| Satisfactory | 13.09.2024 |
+| Soulmask | 13.09.2024 |
 
 ## Requirements
 
