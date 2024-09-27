@@ -1,0 +1,291 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use DateTime;
+
+package Node;
+
+sub new {
+    my ($class, $playername, $steamname, $ipaddr, $netuid, $logon, $logoff) = @_;
+    my $self = {
+        playername  => $playername,
+        steamname   => $steamname,
+        ipaddr      => $ipaddr,
+        netuid      => $netuid,
+        logon       => $logon,
+        logoff      => $logoff,
+        next        => undef,
+    };
+    bless $self, $class;
+    return $self;
+}
+
+sub set_data {
+    my ($self, $playername, $steamname, $ipaddr, $netuid, $logon, $logoff) = @_;
+    $self->{playername} = $playername;
+    $self->{steamname}  = $steamname;
+    $self->{ipaddr}     = $ipaddr;
+    $self->{netuid}     = $netuid;
+    $self->{logon}      = $logon;
+    $self->{logoff}     = $logoff;
+}
+
+sub get_data {
+    my ($self) = @_;
+    return ($self->{playername}, $self->{steamname}, $self->{ipaddr}, $self->{netuid}, $self->{logon}, $self->{logoff});
+}
+
+sub get_next {
+    my ($self) = @_;
+    return $self->{next};
+}
+
+sub set_next {
+    my ($self, $next_node) = @_;
+    $self->{next} = $next_node;
+}
+
+package LinkedList;
+
+sub new {
+    my ($class) = @_;
+    my $self = {
+        head => undef,
+        tail => undef,
+    };
+    bless $self, $class;
+    return $self;
+}
+
+sub add {
+    my ($self, $playername, $steamname, $ipaddr, $netuid, $logon, $logoff) = @_;
+    my $new_node = Node->new($playername, $steamname, $ipaddr, $netuid, $logon, $logoff);
+    
+    if (!defined $self->{head}) {
+        $self->{head} = $new_node;
+        $self->{tail} = $new_node;
+    } else {
+        $self->{tail}->set_next($new_node);
+        $self->{tail} = $new_node;
+    }
+}
+
+sub update_by_steamname {
+    my ($self, $playername, $steamname, $ipaddr, $netuid, $logon, $logoff) = @_;
+    my ($last_matching_node, @nodes);
+    my $current = $self->{head};
+
+    while (defined($current)) {
+        if ($current->{steamname} eq $steamname) {
+            $last_matching_node = $current;
+        }
+        # push @nodes, [$current->get_data()];
+        $current = $current->get_next();
+    }
+
+    if (defined($last_matching_node)) {
+        $last_matching_node->set_data(
+            $playername, 
+            $steamname, 
+            $ipaddr, 
+            $netuid, 
+            $logon, 
+            $logoff
+        );
+        my @updated_data = $last_matching_node->get_data();
+        return 1;
+    }
+    return 0;
+}
+
+sub update_by_netuid {
+    my ($self, $netuid, $logoff) = @_;
+    my $last_matching_node;
+    my $current = $self->{head};
+
+    while (defined($current)) {
+        if ($current->{netuid} == $netuid) {
+            $last_matching_node = $current;
+        }
+        $current = $current->get_next();
+    }
+    if (defined($last_matching_node)) {
+        $last_matching_node->set_data(
+            $last_matching_node->{playername},
+            $last_matching_node->{steamname},
+            $last_matching_node->{ipaddr},
+            $last_matching_node->{netuid},
+            $last_matching_node->{logon},
+            $logoff
+        );
+        my @updated_data = $last_matching_node->get_data();
+        return 1;
+    }
+    return 0;
+}
+
+sub get_all {
+    my ($self) = @_;
+    
+    my @elements;
+    my $current = $self->{head};
+    
+    while (defined($current)) {
+        push @elements, [$current->get_data()];
+        $current = $current->get_next();
+    }
+    
+    return \@elements;
+}
+
+sub get_by_steamname {
+    my ($self, $steamname) = @_;
+    
+    my @elements;
+    my $current = $self->{head};
+    my $last;
+    
+    while (defined($current)) {
+        if ($current->{steamname} eq $steamname) {
+            $last = $current;
+        }
+        $last = $current;
+        $current = $current->get_next();
+    }
+    
+    return \@elements;
+}
+
+sub get_node {
+    my ($self) = @_;
+    
+    my @elements;
+    my $current = $self->{head};
+    
+    while (defined($current)) {
+        push @elements, [$current->get_data()];
+        $current = $current->get_next();
+    }
+    
+    return \@elements;
+}
+
+my $directory = "/home/soulmask/soulmaskserver/WS/Saved/Logs";
+opendir(my $dh, $directory) or die "Cannot open directory: $!";
+# Get all log files that match the naming pattern
+my @files = grep { /^WS-backup-\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}\.log$/ } readdir($dh);
+closedir($dh);
+
+@files = sort {
+    # Extract date and time from the filenames
+    my ($date_a) = $a =~ /WS-backup-(\d{4}\.\d{2}\.\d{2})-(\d{2}\.\d{2}\.\d{2})/;
+    my ($date_b) = $b =~ /WS-backup-(\d{4}\.\d{2}\.\d{2})-(\d{2}\.\d{2}\.\d{2})/;
+
+    # Convert to comparable format (YYYYMMDDHHMMSS)
+    my $datetime_a = $date_a =~ s/\.(\d{2})/$1/gr;  # Replace '.' with ''
+    my $datetime_b = $date_b =~ s/\.(\d{2})/$1/gr;  # Replace '.' with ''
+
+    # Compare the datetime strings
+    $datetime_a cmp $datetime_b;
+} @files;
+
+my $all_content = '';
+
+push(@files, 'WS.log');
+foreach my $file (@files) {
+    open(my $fh, '<', "$directory/$file") or die "Cannot open file '$file': $!";
+    
+    local $/;  # Enable slurp mode to read the whole file at once
+    my $content = <$fh>;
+    close($fh);
+    
+    $all_content .= $content;
+}
+
+my $list = LinkedList->new();
+my ($playername, $steamname, $ipaddr, $netuid, $logon, $logoff);
+my $datetime;
+
+foreach my $line (split /\n/, $all_content) {
+    $line =~ s/\R//g;
+
+    my ($date, $time) = $line =~ /\[(\d{4}\.\d{2}\.\d{2})-(\d{2}\.\d{2}\.\d{2})/;
+    if (defined $date && defined $time) {
+        $datetime = DateTime->new(
+            year   => substr($date, 0, 4),
+            month  => substr($date, 5, 2),
+            day    => substr($date, 8, 2),
+            hour   => substr($time, 0, 2),
+            minute => substr($time, 3, 2),
+            second => substr($time, 6, 2),
+        );
+        $datetime->add(hours => 2);  # UTC to CEST
+
+        if ($line =~ /Join request/) {
+    	    ($steamname) = $line =~ /Name=([^?]*)/;
+            $list->add("", $steamname, "", "", $datetime, "");
+        }
+        if ($line =~/StoreGamemode: player ready./) {
+            ($playername) = $line =~ /Name:([^\$]*)/;
+            ($ipaddr) = $line =~ /Addr:([^,]*)/;
+            ($netuid) = $line =~ /Netuid:([^,]*)/;
+            $logon  = $datetime;
+            $logoff = $datetime;
+
+            $list->update_by_steamname($playername, $steamname, $ipaddr, $netuid, $logon, $logoff);
+        }
+        if ($line =~ /Join succeeded:/) {
+        }
+        if ($line =~ /Display: player leave world./) {
+            ($netuid) = $line =~ /\.\s([^\$]*)/;
+            $list->update_by_netuid($netuid, $datetime);
+        }
+    }
+}
+
+my $current = $list->{head};
+my ($duration, $minutes);
+my $headerline = "%-15s %-15s %-18s %-22s %-22s %-22s %10s\n";
+
+printf $headerline, "Playername", "Steamname", "IP Address", "NetUID", "Logon", "Logoff", "Duration";
+
+while (defined $current) {
+    ($playername, $steamname, $ipaddr, $netuid, $logon, $logoff) = $current->get_data();
+
+    if (defined $logoff) {
+        $duration = $logoff->subtract_datetime($logon);
+        $minutes = $duration->in_units('minutes');
+    } else {
+        $minutes = "N/A";
+    }
+
+    printf $headerline, 
+        $playername, 
+        "(" . $steamname . ")",
+        $ipaddr,
+        $netuid,
+        $logon ? $logon->strftime('%Y.%m.%d-%H.%M.%S') : 'N/A',
+        $logoff ? $logoff->strftime('%Y.%m.%d-%H.%M.%S') : 'N/A',
+        $minutes . " min";
+
+    $current = $current->get_next();
+}
+
+my %total_durations;
+
+$current = $list->{head};
+while (defined $current) {
+    ($playername, $steamname, $ipaddr, $netuid, $logon, $logoff) = $current->get_data();
+    if (defined $logoff) {
+        $duration = $logoff->subtract_datetime($logon);
+        $minutes = $duration->in_units('minutes');
+        $total_durations{$playername} += $minutes;
+    }
+    $current = $current->get_next();
+}
+
+print "\nTotal Duration per Player:\n";
+printf "%-15s %10s\n", "Playername", "Total Duration (min)";
+foreach my $player (keys %total_durations) {
+    printf "%-15s %10d min\n", $player, $total_durations{$player};
+}

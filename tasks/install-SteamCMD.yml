@@ -1,52 +1,61 @@
 ---
-- name: "[gameserver] Download SteamCMD installer"
-  get_url:
-    url: https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
-    dest: /tmp/steamcmd_linux.tar.gz
-  tags: gameserver
-
-- name: "[gameserver] Create SteamCMD directory"
-  file:
-    path: /opt/steamcmd
-    state: directory
-    mode: '0755'
-  become: true
-  become_user: "{{ gameserver_adminuser }}"
-  tags: gameserver
-
-- name: "[gameserver] Extract SteamCMD"
-  unarchive:
-    src: /tmp/steamcmd_linux.tar.gz
-    dest: /opt/steamcmd
-    remote_src: yes
-  become: true
-  tags: gameserver
-
-- name: "[gameserver] Accept Steam License Agreement"
-  lineinfile:
+- name: "[gameserver] Check if SteamCMD is already installed"
+  stat:
     path: /opt/steamcmd/steamcmd.sh
-    line: 'echo "Steam License Agreement was ACCEPTED."'
-    insertbefore: '^#!/bin/bash'
-    state: present
-  become: true
+  register: steamcmd_installed
   tags: gameserver
 
-- name: "[gameserver] Run SteamCMD to update and accept license"
-  command: ./steamcmd.sh +quit
-  args:
-    chdir: /opt/steamcmd/
-  register: steamcmd_output
-  become: true
-  tags: gameserver
+- name: "[gameserver] Ensure SteamCMD installer exists"
+  block:
+    - name: "[gameserver] Check if SteamCMD installer exists"
+      stat:
+        path: /tmp/steamcmd_linux.tar.gz
+      register: steamcmd_installer
 
-- name: "[gameserver] Display SteamCMD output"
-  debug:
-    var: steamcmd_output.stdout
-  tags: gameserver
+    - name: "[gameserver] Download SteamCMD installer if not present"
+      get_url:
+        url: https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+        dest: /tmp/steamcmd_linux.tar.gz
+      when: not steamcmd_installer.stat.exists
 
-- name: "[gameserver] Clean up"
-  file:
-    path: /tmp/steamcmd_linux.tar.gz
-    state: absent
-  become: true
+    - name: "[gameserver] Create SteamCMD directory"
+      file:
+        path: /opt/steamcmd
+        state: directory
+        mode: '0755'
+      become: true
+      become_user: "{{ gameserver_adminuser }}"
+    
+    - name: "[gameserver] Extract SteamCMD"
+      unarchive:
+        src: /tmp/steamcmd_linux.tar.gz
+        dest: /opt/steamcmd
+        remote_src: yes
+      become: true
+    
+    - name: "[gameserver] Accept Steam License Agreement"
+      lineinfile:
+        path: /opt/steamcmd/steamcmd.sh
+        line: 'echo "Steam License Agreement was ACCEPTED."'
+        insertbefore: '^#!/bin/bash'
+        state: present
+      become: true
+    
+    - name: "[gameserver] Run SteamCMD to update and accept license"
+      command: ./steamcmd.sh +quit
+      args:
+        chdir: /opt/steamcmd/
+      register: steamcmd_output
+      become: true
+    
+    - name: "[gameserver] Display SteamCMD output"
+      debug:
+        var: steamcmd_output.stdout
+    
+    - name: "[gameserver] Clean up"
+      file:
+        path: /tmp/steamcmd_linux.tar.gz
+        state: absent
+      become: true
+  when: not steamcmd_installed.stat.exists
   tags: gameserver

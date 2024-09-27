@@ -49,6 +49,27 @@
   become: true
   tags: gameserver
 
+- name: "[gameserver] install dependencies for Soulmask Perl script"
+  apt:
+    name:
+      - libdatetime-perl
+      - libwww-perl
+      - libjson-perl
+    state: present
+    update_cache: yes
+  become: true
+  tags: gameserver
+
+- name: "[gameserver] create user log script (Perl) for Soulmask server"
+  template:
+    src: soulmask/userlist.perl.j2
+    dest: "{{ gameserver_basepath }}/{{ gameserver_installgame }}/soulmask_userlist.pl"
+    owner: "{{ gameserver_adminuser }}"
+    group: "{{ gameserver_admingroup }}"
+    mode: "0755"
+  become: true
+  tags: gameserver
+  
 # - name: "[gameserver] Create systemd service"
 #   template:
 #     src: soulmask/service.j2
