@@ -8,7 +8,7 @@ Currently supported:
 |------|-------|
 | Palworld | 13.09.2024 |
 | Satisfactory | 13.09.2024 |
-| Soulmask | 13.09.2024 |
+| Soulmask | 29.09.2024 |
 
 ## Requirements
 
@@ -72,6 +72,10 @@ gameserver_installgame: "soulmask"
         gameserver_soulmask_serverpassword: ""
         gameserver_soulmask_adminpassword: "veryverysecret"
         gameserver_soulmask_pve: true
+        # Soulmask Mods, omit when not needed
+        gameserver_soulmask_mods:
+          - 3328414477  # Migen Nikke Alice
+          - 3337611408  # Migen Daemon Girl
 ```
 
 ### Commands (Soulmask)
@@ -83,10 +87,13 @@ Start a screen session and start the gameserver in one screen using the command 
 For shutting down the server go to a parallel screen session and execute `telnet localhost 18888`. 
 Then shutdown the server with the command `SaveAndExit 1`. 
 
+For Soulmask Mods please note that you have to subscribe to the mods you want to play in your client in Steam Workshop. 
+At the time of writing there seems to be no automatism to download necessary mods when connecting to a private server. 
+
 ## License
 
 MIT / BSD
 
 ## Author Information
 
-This role was created Stefan Pommerening as a personal project.
+This role was created by Stefan Pommerening as a personal project.

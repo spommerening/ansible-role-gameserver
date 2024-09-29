@@ -11,6 +11,7 @@ gameserver_soulmask_maxplayers: 50
 gameserver_soulmask_serverpassword: ""
 gameserver_soulmask_adminpassword: "veryverysecret"
 gameserver_soulmask_pve: true
+gameserver_soulmask_mods: []
 
 gameserver_satisfactory_enabled: true
 gameserver_satisfactory_state: started
