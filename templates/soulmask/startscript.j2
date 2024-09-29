@@ -33,5 +33,5 @@ $SERVERDIR/WS/Binaries/Linux/WSServer-Linux-Shipping WS Level01_Main -UTF8Output
     -adminpsw='{{ gameserver_soulmask_adminpassword }}' \
     {% if gameserver_soulmask_pve %}-pve {% endif %}\
     -Port=8777 -QueryPort=27015 -EchoPort=18888 -MULTIHOME=0.0.0.0 \
-    {% if gameserver_soulmask_mods and gameserver_soulmask_mods | length > 0 %}-mod=”{{ gameserver_soulmask_mods | join(',') }}” {% endif %}\
+    {% if gameserver_soulmask_mods and gameserver_soulmask_mods | length > 0 %}-mod='”{{ gameserver_soulmask_mods | join(',') }}”' {% endif %}\
     -initbackup -backup=900 -saving=600
